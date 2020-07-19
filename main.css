@@ -1,0 +1,13 @@
+canvas.creatures {
+  display: block;
+  padding: 0;
+  margin: auto;
+  height: 600px;
+  width: 600px;
+  background-color: #bfbfbf;
+}
+
+h1 {
+  display: block;
+  text-align: center;
+}
