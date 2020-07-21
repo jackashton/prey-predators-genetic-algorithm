@@ -125,7 +125,7 @@ class Predator extends Organism {
    * @param x {number} x-coordinate on canvas that the Predator will be drawn at.
    * @param y {number} y-coordinate on canvas that the Predator will be drawn at.
    * @param radius {number} radius of the Predator
-   * @param energy {number} the amount of random directions / accelerations that the Predator can have.
+   * @param energy {number} the amount of energy the Predator can have, if it is <= 0 then it cannot move / is dead.
    * @param senseDistance {number} the distance from itself that it can detect objects in the environment
    * @param speed {number} the speed that the predator can move in environment
    * @param fillStyle {string} color of Predator
@@ -134,6 +134,7 @@ class Predator extends Organism {
     super(x, y, radius, fillStyle); // '#3498EB'
 
     this.velocity = new Vector(0, 0);
+    this.acceleration = new Vector(0, 0);
     this.energy = energy; // energy is used as an index for the directions array
     this.maxEnergy = energy;
     this.senseDistance = senseDistance;
@@ -171,7 +172,7 @@ class Predator extends Organism {
   update(prey) {
     if (!this.isDead) {
       if (this.energy > 1) {
-        if (this.dist(prey) <= this.radius) { // if on prey, move prey outside of canvas
+        if (this.dist(prey) <= this.radius + 0.5) { // if on prey (/ very close to prey), move prey outside of canvas
           prey.x = -canvasWidth;
           prey.y = -canvasHeight;
           prey.isDead = true;
@@ -263,10 +264,10 @@ class Predator extends Organism {
       let rgb = hexToRgb(this.fillStyle);
       r = Math.random();
       if (r < 0.5) { // mutate the sensory distance
-        this.senseDistance = this.senseDistance * 1.25;
+        this.senseDistance = this.senseDistance * 1.1;
         if (rgb.b <= 223) rgb.b += 32;
       } else { // mutate the speed
-        this.speed = this.speed * 1.25;
+        this.speed = this.speed * 1.1;
         if (rgb.r <= 223) rgb.r += 32;
       }
       this.fillStyle = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -278,7 +279,7 @@ class Predator extends Organism {
    */
   updateEnergy() {
     let senseCost = 0.25*this.radius + 0.25;
-    let speedCost = 0.05*(this.speed - 3)*(this.speed - 3) + 1;
+    let speedCost = 0.5*(this.speed - 3)*(this.speed - 3) + 1;
     this.energy = this.energy - senseCost - speedCost;
   }
 
@@ -401,8 +402,6 @@ class PredatorPopulation extends Population {
     this.organisms = newPopulation;
 
     this.generation++;
-    $('#day').text(this.generation.toString()); // show the updated generation
-    $('#population-size').text(this.size.toString()); // show updated population size
   }
 }
 
@@ -431,11 +430,11 @@ class EcoSystem {
   constructor(predatorPopulation, preyPopulation) {
     this.predatorPopulation = predatorPopulation;
     this.preyPopulation = preyPopulation;
-    $('#day').text(this.predatorPopulation.generation.toString()); // show the initial generation
-    $('#population-size').text(this.predatorPopulation.size.toString()); // show initial population size
   }
 
   update() {
+    $('#day').text(this.predatorPopulation.generation.toString());
+    $('#population-size').text(this.predatorPopulation.size.toString());
     context.clearRect(0, 0, canvasWidth, canvasHeight); // clears the canvas
     this.predatorPopulation.update(this.preyPopulation);  // updates and draws predators
     this.preyPopulation.update(); // draws prey
@@ -443,7 +442,7 @@ class EcoSystem {
       this.predatorPopulation.naturalSelection();
       this.preyPopulation = new PreyPopulation(this.preyPopulation.size);
     }
-    window.requestAnimationFrame(() => this.update())
+    if (!(this.predatorPopulation.size === 0)) window.requestAnimationFrame(() => this.update())
   }
 }
 
@@ -455,6 +454,6 @@ let predatorPopulation = new PredatorPopulation(predatorPopulationSize);
 let preyPopulation = new PreyPopulation(preyPopulationSize);
 let ecoSystem = new EcoSystem(predatorPopulation, preyPopulation);
 
-setTimeout(function(){
+setTimeout(function() {
   window.requestAnimationFrame(() => ecoSystem.update());
 }, 1000);
