@@ -397,18 +397,20 @@ const predatorPopulation = new PredatorPopulation(predatorPopulationSize);
 let preyPopulation = new PreyPopulation(preyPopulationSize);
 
 const main = () => {
-  if (!context) {
-    console.error('Unable to initialize canvas');
-    return;
-  }
-
+  // display statistics
   const dayLabel = document.getElementById('day');
   if (dayLabel) dayLabel.innerText = predatorPopulation.generation.toString();
   const populationLabel = document.getElementById('population-size');
   if (populationLabel) populationLabel.innerText = predatorPopulation.size.toString();
-  context.clearRect(0, 0, canvas.height, canvas.width); // clears the canvas
-  predatorPopulation.update(preyPopulation); // updates and draws predators
+
+  // clears canvas
+  context?.clearRect(0, 0, canvas.height, canvas.width);
+
+  // updates and draw populations
+  predatorPopulation.update(preyPopulation);
   preyPopulation.update(); // draws prey
+
+  // perform natural selection on the population of predators and refresh the prey
   if (predatorPopulation.allDead || preyPopulation.allDead) {
     predatorPopulation.naturalSelection();
     preyPopulation = new PreyPopulation(preyPopulation.size);
