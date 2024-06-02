@@ -1,0 +1,19 @@
+{
+  "root": true,
+  "ignorePatterns": ["!**/*"],
+  "plugins": ["prettier", "vitest"],
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:vitest/recommended"
+  ],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "prettier/prettier": "error"
+      }
+    }
+  ]
+}
