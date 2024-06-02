@@ -1,85 +1,8 @@
-const canvas = $('canvas.creatures');
-let context = canvas[0].getContext('2d');
-const canvasWidth = canvas.width();
-const canvasHeight = canvas.height();
-canvas.attr({height: canvasHeight, width: canvasWidth});
+import { Vector2D } from "./utils/vector";
+import { rgbToHex, hexToRgb } from "./utils/color";
 
-
-function hexToRgb(hex) {
-  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-}
-
-function rgbToHex(r, g, b) {
-  return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
-
-class Vector {
-  /**
-   * Constructor for 2-dimensional Vector
-   * @param x {number} x-coordinate
-   * @param y {number} y-coordinate
-   */
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Returns new Vector created from the angle theta.
-   * @param theta {number} angle in radians
-   * @returns {Vector}
-   */
-  static fromAngle(theta) {
-    return new Vector(Math.cos(theta), Math.sin(theta));
-  }
-
-  /**
-   * Adds the x,y values of other Vector to this Vector and returns it.
-   * @param other {Vector}
-   * @returns {Vector}
-   */
-  add(other) {
-    this.x += other.x;
-    this.y += other.y;
-    return this;
-  }
-
-  /**
-   * Multiplies Vector by a constant number n and returns it.
-   * @param n {number}
-   * @returns {Vector}
-   */
-  multiply(n) {
-    this.x *= n;
-    this.y *= n;
-    return this;
-  }
-
-  /**
-   * Returns the magnitude of the Vector.
-   * @returns {number}
-   */
-  magnitude() {
-    return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
-  }
-
-  /**
-   * Normalizes the vector and returns it.
-   * @returns {Vector}
-   */
-  normalize() {
-    let magnitude = this.magnitude();
-    this.x /= magnitude;
-    this.y /= magnitude;
-    return this;
-  }
-}
+const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+let context = canvas.getContext('2d');
 
 
 class Organism {
@@ -426,34 +349,24 @@ class PreyPopulation extends Population {
 }
 
 
-class EcoSystem {
-  constructor(predatorPopulation, preyPopulation) {
-    this.predatorPopulation = predatorPopulation;
-    this.preyPopulation = preyPopulation;
-  }
-
-  update() {
-    $('#day').text(this.predatorPopulation.generation.toString());
-    $('#population-size').text(this.predatorPopulation.size.toString());
-    context.clearRect(0, 0, canvasWidth, canvasHeight); // clears the canvas
-    this.predatorPopulation.update(this.preyPopulation);  // updates and draws predators
-    this.preyPopulation.update(); // draws prey
-    if (this.predatorPopulation.allDead || this.preyPopulation.allDead) {
-      this.predatorPopulation.naturalSelection();
-      this.preyPopulation = new PreyPopulation(this.preyPopulation.size);
-    }
-    if (!(this.predatorPopulation.size === 0)) window.requestAnimationFrame(() => this.update())
-  }
-}
-
-
 const predatorPopulationSize = 5; // number of Predators in population
 const preyPopulationSize = 30; // number of Prey in population
 
 let predatorPopulation = new PredatorPopulation(predatorPopulationSize);
 let preyPopulation = new PreyPopulation(preyPopulationSize);
-let ecoSystem = new EcoSystem(predatorPopulation, preyPopulation);
 
-setTimeout(function() {
-  window.requestAnimationFrame(() => ecoSystem.update());
-}, 1000);
+const main = () => {
+  $('#day').text(this.predatorPopulation.generation.toString());
+  $('#population-size').text(this.predatorPopulation.size.toString());
+  context.clearRect(0, 0, canvas.height, canvas.width); // clears the canvas
+  this.predatorPopulation.update(this.preyPopulation);  // updates and draws predators
+  this.preyPopulation.update(); // draws prey
+  if (this.predatorPopulation.allDead || this.preyPopulation.allDead) {
+    this.predatorPopulation.naturalSelection();
+    this.preyPopulation = new PreyPopulation(this.preyPopulation.size);
+  }
+
+  setTimeout(() => {
+    window.requestAnimationFrame(main);
+  }, 1000);
+}
