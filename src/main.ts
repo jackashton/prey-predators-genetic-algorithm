@@ -4,20 +4,22 @@ import { rgbToHex, hexToRgb } from "./utils/color";
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 let context = canvas.getContext('2d');
 
-
 class Organism {
+  position: Vector2D;
+  radius: number;
+  color: string;
+  isDead: boolean;
+
   /**
    * Constructor for Organism.
-   * @param x {number} x-coordinate that the Organism will be drawn at on the canvas.
-   * @param y {number} y-coordinate that the Organism will be drawn at on the canvas.
+   * @param position {Vector2D} coordinates that the Organism will be drawn at on the canvas.
    * @param radius {number} radius of organism (circle) on canvas.
-   * @param fillStyle {string} color of organism (circle) on canvas in rgb or hex.
+   * @param color {string} color of organism (circle) on canvas in rgb or hex.
    */
-  constructor(x, y, radius, fillStyle) {
-    this.x = x;
-    this.y = y;
+  constructor(position: Vector2D, radius: number, color: string) {
+    this.position = position;
     this.radius = radius;
-    this.fillStyle = fillStyle;
+    this.color = color;
   }
 
   /**
@@ -25,39 +27,48 @@ class Organism {
    */
   draw() {
     context.beginPath();
-    context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
-    context.fillStyle = this.fillStyle;
+    context.arc(this.position.x, this.position.y, this.radius, 0, 2 * Math.PI, false);
+    context.fillStyle = this.color;
     context.fill();
   }
 
   /**
-   * Return the euclidean distance between this Organism and another organism
+   * Return the Euclidean distance between this Organism and another organism
    * @param other {Organism}
    * @returns {number}
    */
-  dist(other) {
-    return Math.sqrt(Math.pow(other.x - this.x, 2) + Math.pow(other.y - this.y, 2));
+  dist(other: Organism) {
+    return this.position.distance(other.position);
   }
 
 }
 
 
 class Predator extends Organism {
+  velocity: Vector2D;
+  acceleration: Vector2D;
+  energy: number;
+  maxEnergy: number;
+  senseDistance: number;
+  speed: number;
+  preyEaten: number;
+  isDead: boolean;
+  isSurvivor: boolean;
+
   /**
    * Constructor for Predator.
-   * @param x {number} x-coordinate on canvas that the Predator will be drawn at.
-   * @param y {number} y-coordinate on canvas that the Predator will be drawn at.
+   * @param position {Vector2D} coordinates on canvas that the Predator will be drawn at.
    * @param radius {number} radius of the Predator
    * @param energy {number} the amount of energy the Predator can have, if it is <= 0 then it cannot move / is dead.
    * @param senseDistance {number} the distance from itself that it can detect objects in the environment
    * @param speed {number} the speed that the predator can move in environment
-   * @param fillStyle {string} color of Predator
+   * @param color {string} color of Predator
    */
-  constructor(x, y, radius, energy, senseDistance, speed, fillStyle='#000000') {
-    super(x, y, radius, fillStyle); // '#3498EB'
+  constructor(position: Vector2D, radius: number, energy: number, senseDistance: number, speed: number, color='#000000') {
+    super(position, radius, color);
 
-    this.velocity = new Vector(0, 0);
-    this.acceleration = new Vector(0, 0);
+    this.velocity = new Vector2D(0, 0);
+    this.acceleration = new Vector2D(0, 0);
     this.energy = energy; // energy is used as an index for the directions array
     this.maxEnergy = energy;
     this.senseDistance = senseDistance;
@@ -70,82 +81,82 @@ class Predator extends Organism {
   /**
    * Move the Predator by updating its acceleration, velocity and x,y coordinates.
    */
-  move(direction) {
+  move(direction: Vector2D) {
     this.acceleration = direction;
     this.velocity
       .add(direction)
       .normalize() // make velocity vector a unit vector to preserve direction given by acceleration
       .multiply(this.speed); // direction of velocity is different but speed is constant
 
-    this.x += this.velocity.x;
-    if (this.x < this.radius) {
-      this.x = this.radius;
-    } else if (this.x > canvasWidth - this.radius) {
-      this.x = canvasWidth - this.radius;
+    this.position.x += this.velocity.x;
+    if (this.position.x < this.radius) {
+      this.position.x = this.radius;
+    } else if (this.position.x > canvas.width - this.radius) {
+      this.position.x = canvas.width - this.radius;
     }
 
-    this.y += this.velocity.y;
-    if (this.y < this.radius) {
-      this.y = this.radius;
-    } else if (this.y > canvasHeight - this.radius) {
-      this.y = canvasHeight - this.radius;
+    this.position.y += this.velocity.y;
+    if (this.position.y < this.radius) {
+      this.position.y = this.radius;
+    } else if (this.position.y > canvas.height - this.radius) {
+      this.position.y = canvas.height - this.radius;
     }
   }
 
-  update(prey) {
+  update(prey: Prey) {
     if (!this.isDead) {
       if (this.energy > 1) {
         if (this.dist(prey) <= this.radius + 0.5) { // if on prey (/ very close to prey), move prey outside of canvas
-          prey.x = -canvasWidth;
-          prey.y = -canvasHeight;
+          prey.position.x = -canvas.width;
+          prey.position.y = -canvas.height;
           prey.isDead = true;
           this.preyEaten++;
         }
 
         if (this.dist(prey) <= this.senseDistance && this.preyEaten < 2) { // move to prey even if we sense an edge (prey are always on canvas)
-          this.move(new Vector(prey.x - this.x, prey.y - this.y));
+          this.move(new Vector2D(prey.position.x - this.position.x, prey.position.y - this.position.y));
         } else if (this.distToEdge(this.radius, null) <= this.senseDistance) { // left edge
           if (0 < this.preyEaten) {
             if (this.distToEdge(this.radius, null) <= this.radius) {
               this.isSurvivor = true;
             } else {
-              this.move(new Vector(-1 ,0));
+              this.move(new Vector2D(-1 ,0));
             }
           } else {
-            this.move(new Vector(Math.random(), (Math.random() * 2) - 1));
+            this.move(new Vector2D(Math.random(), (Math.random() * 2) - 1));
           }
-        } else if (this.distToEdge(canvasWidth, null) <= this.senseDistance) { // right edge
+        } else if (this.distToEdge(canvas.width, null) <= this.senseDistance) { // right edge
           if (0 < this.preyEaten) {
-            if (this.distToEdge(canvasWidth, null) <= this.radius) {
+            if (this.distToEdge(canvas.width, null) <= this.radius) {
               this.isSurvivor = true;
             } else {
-              this.move(new Vector(1 ,0));
+              this.move(new Vector2D(1 ,0));
             }
           } else {
-            this.move(new Vector(-Math.random(), (Math.random() * 2) - 1));
+            this.move(new Vector2D(-Math.random(), (Math.random() * 2) - 1));
           }
         } else if (this.distToEdge(null, this.radius) <= this.senseDistance) { // top edge
           if (0 < this.preyEaten) {
             if (this.distToEdge(null, this.radius) <= this.radius) {
               this.isSurvivor = true;
             } else {
-              this.move(new Vector(0 ,-1));
+              this.move(new Vector2D(0 ,-1));
             }
           } else {
-            this.move(new Vector((Math.random() * 2) - 1, Math.random()));
+            this.move(new Vector2D((Math.random() * 2) - 1, Math.random()));
           }
-        } else if (this.distToEdge(null, canvasHeight) <= this.senseDistance) { // bottom edge
+        } else if (this.distToEdge(null, canvas.height) <= this.senseDistance) { // bottom edge
           if (0 < this.preyEaten) {
-            if (this.distToEdge(null, canvasHeight) <= this.radius) {
+            if (this.distToEdge(null, canvas.height) <= this.radius) {
               this.isSurvivor = true;
             } else {
-              this.move(new Vector(0,1));
+              this.move(new Vector2D(0,1));
             }
           } else {
-            this.move(new Vector((Math.random() * 2) - 1, -Math.random()));
+            this.move(new Vector2D((Math.random() * 2) - 1, -Math.random()));
           }
         } else {
-          this.move(Vector.fromAngle(Math.random() * 2 * Math.PI));
+          this.move(Vector2D.fromAngle(Math.random() * 2 * Math.PI));
         }
         this.updateEnergy();
       } else {
@@ -162,19 +173,19 @@ class Predator extends Organism {
 
   drawSense() {
     context.beginPath();
-    context.arc(this.x, this.y, this.senseDistance, 0, 2 * Math.PI, false);
+    context.arc(this.position.x, this.position.y, this.senseDistance, 0, 2 * Math.PI, false);
     context.stroke();
   }
 
   drawDirection() {
     context.beginPath();
-    context.moveTo(this.x, this.y);
-    context.lineTo(this.x + ((this.radius / 2) * this.velocity.x), this.y + ((this.radius / 2) * this.velocity.y));
+    context.moveTo(this.position.x, this.position.y);
+    context.lineTo(this.position.x + ((this.radius / 2) * this.velocity.x), this.position.y + ((this.radius / 2) * this.velocity.y));
     context.stroke();
   }
 
   clone() {
-    return new Predator(this.x, this.y, this.radius, this.maxEnergy, this.senseDistance, this.speed, this.fillStyle);
+    return new Predator(this.position, this.radius, this.maxEnergy, this.senseDistance, this.speed, this.color);
   }
 
   /**
@@ -184,7 +195,8 @@ class Predator extends Organism {
   mutate(mutationRate) {
     let r = Math.random();
     if (r < mutationRate) {
-      let rgb = hexToRgb(this.fillStyle);
+      let rgb = hexToRgb(this.color);
+      if (!rgb) return;
       r = Math.random();
       if (r < 0.5) { // mutate the sensory distance
         this.senseDistance = this.senseDistance * 1.1;
@@ -193,7 +205,7 @@ class Predator extends Organism {
         this.speed = this.speed * 1.1;
         if (rgb.r <= 223) rgb.r += 32;
       }
-      this.fillStyle = rgbToHex(rgb.r, rgb.g, rgb.b);
+      this.color = rgbToHex(rgb.r, rgb.g, rgb.b);
     }
   }
 
@@ -224,7 +236,7 @@ class Predator extends Organism {
       }
       c = -x;
     }
-    return Math.abs(a*this.x + b*this.y + c) / Math.sqrt((a * a) + (b * b));
+    return Math.abs(a*this.position.x + b*this.position.y + c) / Math.sqrt((a * a) + (b * b));
   }
 }
 
@@ -232,17 +244,21 @@ class Predator extends Organism {
 class Prey extends Organism {
   /**
    * Constructor for Prey.
-   * @param x {number} x-coordinate on canvas that Prey will be drawn at
-   * @param y {number} y-coordinate on canvas that Prey will be drawn at
+   * @param position {Vector2D} coordinates on canvas that Prey will be drawn at
    * @param radius {number} radius of the Prey
    */
-  constructor(x, y, radius) {
-    super(x, y, radius, '#23BA4C');
+  constructor(position: Vector2D, radius: number) {
+    super(position, radius, '#23BA4C');
   }
 }
 
 
-class Population {
+class Population<T extends Organism> {
+  size: number;
+  organisms: T[];
+  allDead: boolean;
+  generation: number;
+
   /**
    * Constructor for Population.
    * @param size of Population
@@ -255,31 +271,31 @@ class Population {
 }
 
 
-class PredatorPopulation extends Population {
+class PredatorPopulation extends Population<Predator> {
   constructor(size) {
     super(size);
     let radius = 5;
-    let randomX = Math.floor(Math.random() * (canvasWidth - radius) + radius);
-    let randomY = Math.floor(Math.random() * (canvasHeight - radius) + radius);
+    let randomX = Math.floor(Math.random() * (canvas.width - radius) + radius);
+    let randomY = Math.floor(Math.random() * (canvas.height - radius) + radius);
     let energy = 1000;
     let senseDistance = radius*4;
     let speed = 3;
     for (let i = 0; i < size; i++) {
       if (Math.random() < 0.5) {
         if (Math.random() < 0.5) {
-          this.organisms.push(new Predator(randomX, radius, radius, energy, senseDistance, speed));
+          this.organisms.push(new Predator(new Vector2D(randomX, radius), radius, energy, senseDistance, speed));
         } else {
-          this.organisms.push(new Predator(randomX, canvasHeight - radius, radius, energy, senseDistance, speed));
+          this.organisms.push(new Predator(new Vector2D(randomX, canvas.height - radius), radius, energy, senseDistance, speed));
         }
       } else {
         if (Math.random() < 0.5) {
-          this.organisms.push(new Predator(radius, randomY, radius,energy, senseDistance, speed));
+          this.organisms.push(new Predator(new Vector2D(radius, randomY), radius,energy, senseDistance, speed));
         } else {
-          this.organisms.push(new Predator(canvasWidth - radius, randomY, radius, energy, senseDistance, speed));
+          this.organisms.push(new Predator(new Vector2D(canvas.width - radius, randomY), radius, energy, senseDistance, speed));
         }
       }
     }
-    this.generation = 1;
+    this.generation = 0;
   }
 
   update(preyPopulation) {
@@ -329,12 +345,12 @@ class PredatorPopulation extends Population {
 }
 
 
-class PreyPopulation extends Population {
+class PreyPopulation extends Population<Prey> {
   constructor(size) {
     super(size);
     let radius = 5;
     for (let i = 0; i < size; i++)
-      this.organisms.push(new Prey(Math.floor(Math.random() * (canvasWidth - radius) + radius),  Math.floor(Math.random() * (canvasHeight - radius) + radius), radius));
+      this.organisms.push(new Prey(new Vector2D(Math.floor(Math.random() * (canvas.width - radius) + radius),  Math.floor(Math.random() * (canvas.height - radius) + radius)), radius));
   }
 
   update() {
@@ -348,7 +364,6 @@ class PreyPopulation extends Population {
   }
 }
 
-
 const predatorPopulationSize = 5; // number of Predators in population
 const preyPopulationSize = 30; // number of Prey in population
 
@@ -356,14 +371,14 @@ let predatorPopulation = new PredatorPopulation(predatorPopulationSize);
 let preyPopulation = new PreyPopulation(preyPopulationSize);
 
 const main = () => {
-  $('#day').text(this.predatorPopulation.generation.toString());
-  $('#population-size').text(this.predatorPopulation.size.toString());
+  // $('#day').text(this.predatorPopulation.generation.toString());
+  // $('#population-size').text(this.predatorPopulation.size.toString());
   context.clearRect(0, 0, canvas.height, canvas.width); // clears the canvas
-  this.predatorPopulation.update(this.preyPopulation);  // updates and draws predators
-  this.preyPopulation.update(); // draws prey
-  if (this.predatorPopulation.allDead || this.preyPopulation.allDead) {
-    this.predatorPopulation.naturalSelection();
-    this.preyPopulation = new PreyPopulation(this.preyPopulation.size);
+  predatorPopulation.update(preyPopulation);  // updates and draws predators
+  preyPopulation.update(); // draws prey
+  if (predatorPopulation.allDead || preyPopulation.allDead) {
+    predatorPopulation.naturalSelection();
+    preyPopulation = new PreyPopulation(preyPopulation.size);
   }
 
   setTimeout(() => {
