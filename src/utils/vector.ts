@@ -9,7 +9,6 @@ export class Vector2D {
 
   /**
    * Adds another vector to this vector and returns a new resulting vector
-   * @param other {Vector2D}
    */
   add(other: Vector2D) {
     return new Vector2D(this.x + other.x, this.y + other.y);
@@ -17,7 +16,6 @@ export class Vector2D {
 
   /**
    * Subtracts another vector from this vector and returns a new resulting vector
-   * @param other {Vector2D}
    */
   subtract(other: Vector2D) {
     return new Vector2D(this.x - other.x, this.y - other.y);
@@ -25,7 +23,6 @@ export class Vector2D {
 
   /**
    * Multiply this vector by a scalar and return new result vector
-   * @param scalar {number}
    */
   multiply(scalar: number) {
     return new Vector2D(this.x * scalar, this.y * scalar);
@@ -33,7 +30,6 @@ export class Vector2D {
 
   /**
    * Divide this vector by a scalar and return new result vector
-   * @param scalar {number}
    */
   divide(scalar: number) {
     if (scalar === 0) {
@@ -44,7 +40,6 @@ export class Vector2D {
 
   /**
    * Calculate the dot product of this vector and another vector
-   * @param other {Vector2D}
    */
   dot(other: Vector2D) {
     return this.x * other.x + this.y * other.y;
@@ -70,7 +65,6 @@ export class Vector2D {
 
   /**
    * Calculate the distance between this vector and another vector
-   * @param other {Vector2D}
    */
   distance(other: Vector2D): number {
     return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
@@ -78,8 +72,7 @@ export class Vector2D {
 
   /**
    * Returns new Vector created from the angle theta.
-   * @param theta {number} angle in radians
-   * @returns {Vector2D}
+   * @param theta - angle in radians
    */
   static fromAngle(theta: number) {
     return new Vector2D(Math.cos(theta), Math.sin(theta));
@@ -87,7 +80,6 @@ export class Vector2D {
 
   /**
    * Check if this vector is equal to another vector
-   * @param other {Vector2D}
    */
   equals(other: Vector2D) {
     return this.x === other.x && this.y === other.y;
@@ -109,7 +101,6 @@ export class Vector2D {
 
   /**
    * Create a vector from an array
-   * @param arr {[number, number]}
    */
   static fromArray([x, y]: [number, number]) {
     return new Vector2D(x, y);
