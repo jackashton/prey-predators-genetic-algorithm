@@ -36,7 +36,6 @@ class Organism {
 
   /**
    * Return the Euclidean distance between this Organism and another organism
-   * @param other {Organism}
    */
   dist(other: Organism) {
     return this.position.distance(other.position);
@@ -89,7 +88,7 @@ class Predator extends Organism {
    */
   move(direction: Vector2D) {
     this.acceleration = direction;
-    this.velocity
+    this.velocity = this.velocity
       .add(direction)
       .normalize() // make velocity vector a unit vector to preserve direction given by acceleration
       .multiply(this.speed); // direction of velocity is different but speed is constant
@@ -262,8 +261,8 @@ class Predator extends Organism {
 class Prey extends Organism {
   /**
    * Constructor for Prey.
-   * @param position {Vector2D} coordinates on canvas that Prey will be drawn at
-   * @param radius {number} radius of the Prey
+   * @param position - coordinates on canvas that Prey will be drawn at
+   * @param radius - radius of the Prey
    */
   constructor(position: Vector2D, radius: number) {
     super(position, radius, '#23BA4C');
@@ -403,8 +402,10 @@ const main = () => {
     return;
   }
 
-  // $('#day').text(this.predatorPopulation.generation.toString());
-  // $('#population-size').text(this.predatorPopulation.size.toString());
+  const dayLabel = document.getElementById('day');
+  if (dayLabel) dayLabel.innerText = predatorPopulation.generation.toString();
+  const populationLabel = document.getElementById('population-size');
+  if (populationLabel) populationLabel.innerText = predatorPopulation.size.toString();
   context.clearRect(0, 0, canvas.height, canvas.width); // clears the canvas
   predatorPopulation.update(preyPopulation); // updates and draws predators
   preyPopulation.update(); // draws prey
