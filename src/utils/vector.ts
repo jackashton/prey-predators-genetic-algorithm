@@ -77,6 +77,15 @@ export class Vector2D {
   }
 
   /**
+   * Returns new Vector created from the angle theta.
+   * @param theta {number} angle in radians
+   * @returns {Vector2D}
+   */
+  static fromAngle(theta: number) {
+    return new Vector2D(Math.cos(theta), Math.sin(theta));
+  }
+
+  /**
    * Check if this vector is equal to another vector
    * @param other {Vector2D}
    */
