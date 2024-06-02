@@ -150,9 +150,9 @@ class Predator extends Organism {
   move(direction) {
     this.acceleration = direction;
     this.velocity
-        .add(direction)
-        .normalize() // make velocity vector a unit vector to preserve direction given by acceleration
-        .multiply(this.speed); // direction of velocity is different but speed is constant
+      .add(direction)
+      .normalize() // make velocity vector a unit vector to preserve direction given by acceleration
+      .multiply(this.speed); // direction of velocity is different but speed is constant
 
     this.x += this.velocity.x;
     if (this.x < this.radius) {
